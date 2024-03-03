@@ -20,7 +20,6 @@ function findCurrencyRates(worksheet) {
         const currency = prevCellValue.split(" ")[0];
         currencyRates[currency] = cellValue;
       } else {
-        // Якщо наступне поле не містить "Rate", то припиняємо перебір рядків
         break;
       }
     }
@@ -81,7 +80,7 @@ async function parseAndValidateFile(file, invoicingMonth) {
     }
 
     const currencyRates = findCurrencyRates(worksheet);
-    return { data, currencyRates }; // Повертаємо об'єкт з даними та валютними курсами
+    return { data, currencyRates };
   } catch (error) {
     throw error;
   }

@@ -14,14 +14,13 @@ async function processInvoices(data, currencyRates) {
 
       const totalPrice = parseFloat(row["Total Price"]);
       if (!isNaN(totalPrice)) {
-        // Перевірка, чи не є totalPrice NaN
         const invoiceCurrency = row["Invoice Currency"];
         const currencyRate = currencyRates[invoiceCurrency];
 
         const invoiceTotal = totalPrice * currencyRate;
-        invoice["Invoice Total"] = invoiceTotal.toFixed(2); // Округлення до двох знаків після коми
+        invoice["Invoice Total"] = invoiceTotal.toFixed(2);
       } else {
-        invoice["Invoice Total"] = null; // Якщо totalPrice === NaN, то встановлюємо Invoice Total як null
+        invoice["Invoice Total"] = null;
       }
 
       const validationErrors = validateInvoice(row);
@@ -30,7 +29,7 @@ async function processInvoices(data, currencyRates) {
       invoicesData.push(invoice);
     });
 
-    const invoicingMonth = data[1]["InvoicingMonth"]; // Змінив індекс, оскільки ми видалили перший рядок
+    const invoicingMonth = data[1]["InvoicingMonth"];
 
     return {
       InvoicingMonth: invoicingMonth,
