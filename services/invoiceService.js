@@ -1,13 +1,11 @@
 async function processInvoices(data) {
   try {
-    // Отримання валютних курсів
     const currencyRates = {
       USD: data[0]["USD Rate"],
       EUR: data[0]["EUR Rate"],
       GBP: data[0]["GBP Rate"],
     };
 
-    // Видалення перших рядків даних, які містять валютні курси
     data.shift();
 
     const invoicesData = [];
@@ -22,10 +20,10 @@ async function processInvoices(data) {
         invoice[key] = row[key];
       });
 
-      // Розрахунок Invoice Total
       const totalPrice = parseFloat(row["Total Price"]);
       const invoiceCurrency = row["Invoice Currency"];
       const currencyRate = currencyRates[invoiceCurrency];
+
       const invoiceTotal = totalPrice * currencyRate;
       invoice["Invoice Total"] = invoiceTotal;
 

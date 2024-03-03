@@ -16,23 +16,45 @@ async function parseAndValidateFile(file, invoicingMonth) {
       throw new Error("Invoicing month mismatch");
     }
 
-    const columns = worksheet.getRow(5).values;
-
-    // Перевірка структури таблиці
     validationUtils.validateTableStructure(columns);
 
-    const data = [];
-    worksheet.eachRow((row, rowIndex) => {
-      if (rowIndex > 1) {
-        const rowData = {};
-        row.eachCell((cell, colIndex) => {
-          const columnName = columns[colIndex];
-          rowData[columnName] = cell.value;
-        });
-        data.push(rowData);
+    const currencyRates = {};
+    columnsRow.eachCell({ includeEmpty: true }, function (cell, colNumber) {
+      const columnName = columns[colNumber];
+      if (columnName.endsWith("Rate")) {
+        const currency = columnName.split(" ")[0]; // Валюта в заголовку
+        currencyRates[currency] = cell.value;
       }
     });
-    //console.log("data", data);
+
+    const data = [];
+    let emptyCustomerCellsCount = 0;
+
+    let rowIndex = 6;
+    while (emptyCustomerCellsCount < 3) {
+      const row = worksheet.getRow(rowIndex);
+      const rowData = {};
+      let isRowEmpty = true;
+      row.eachCell({ includeEmpty: true }, function (cell, colNumber) {
+        const columnName = columns[colNumber];
+        if (columnName) {
+          rowData[columnName] = cell.value;
+          if (columnName === "Customer" && cell.value) {
+            isRowEmpty = false;
+            emptyCustomerCellsCount = 0;
+          }
+        }
+      });
+
+      if (isRowEmpty) {
+        emptyCustomerCellsCount += 1;
+      } else if (!isRowEmpty && Object.keys(rowData).length > 0) {
+        data.push(rowData);
+      }
+
+      rowIndex++;
+    }
+
     return data;
   } catch (error) {
     throw error;
