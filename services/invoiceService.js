@@ -1,10 +1,7 @@
 async function processInvoices(data, currencyRates) {
   try {
-    //console.log(data);
-
     const invoicesData = [];
     data.forEach((row, index) => {
-      // Додаємо індекс для першого рядка, де зберігаються валютні курси
       const invoice = {};
 
       if (row["Status"] !== "Ready" && !row["Invoice #"]) {
@@ -16,11 +13,16 @@ async function processInvoices(data, currencyRates) {
       });
 
       const totalPrice = parseFloat(row["Total Price"]);
-      const invoiceCurrency = row["Invoice Currency"];
-      const currencyRate = currencyRates[invoiceCurrency];
+      if (!isNaN(totalPrice)) {
+        // Перевірка, чи не є totalPrice NaN
+        const invoiceCurrency = row["Invoice Currency"];
+        const currencyRate = currencyRates[invoiceCurrency];
 
-      const invoiceTotal = totalPrice * currencyRate;
-      invoice["Invoice Total"] = invoiceTotal;
+        const invoiceTotal = totalPrice * currencyRate;
+        invoice["Invoice Total"] = invoiceTotal.toFixed(2); // Округлення до двох знаків після коми
+      } else {
+        invoice["Invoice Total"] = null; // Якщо totalPrice === NaN, то встановлюємо Invoice Total як null
+      }
 
       const validationErrors = validateInvoice(row);
       invoice["validationErrors"] = validationErrors;
