@@ -17,6 +17,8 @@ exports.uploadFile = async (req, res) => {
 
     const result = await invoiceService.processInvoices(data, currencyRates);
 
+    result.InvoicingMonth = invoicingMonth;
+
     return res.status(200).json(result);
   } catch (error) {
     console.error("Error uploading file:", error);
