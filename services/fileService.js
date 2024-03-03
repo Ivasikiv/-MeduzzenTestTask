@@ -1,6 +1,34 @@
 const ExcelJS = require("exceljs");
 const validationUtils = require("../utils/validationUtils");
 
+function findCurrencyRates(worksheet) {
+  const currencyRates = {};
+
+  for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
+    const currenciesRow = worksheet.getRow(rowNumber);
+    const currenciesCount = currenciesRow.actualCellCount;
+
+    for (let colNumber = 2; colNumber <= currenciesCount; colNumber++) {
+      const cellValue = currenciesRow.getCell(colNumber).value;
+      const prevCellValue = currenciesRow.getCell(colNumber - 1).value;
+
+      if (
+        !isNaN(cellValue) &&
+        prevCellValue &&
+        prevCellValue.includes("Rate")
+      ) {
+        const currency = prevCellValue.split(" ")[0];
+        currencyRates[currency] = cellValue;
+      } else {
+        // Якщо наступне поле не містить "Rate", то припиняємо перебір рядків
+        break;
+      }
+    }
+  }
+
+  return currencyRates;
+}
+
 async function parseAndValidateFile(file, invoicingMonth) {
   try {
     const workbook = new ExcelJS.Workbook();
@@ -23,15 +51,6 @@ async function parseAndValidateFile(file, invoicingMonth) {
     });
 
     validationUtils.validateTableStructure(columns);
-
-    const currencyRates = {};
-    columnsRow.eachCell({ includeEmpty: true }, function (cell, colNumber) {
-      const columnName = columns[colNumber];
-      if (columnName.endsWith("Rate")) {
-        const currency = columnName.split(" ")[0]; // Валюта в заголовку
-        currencyRates[currency] = cell.value;
-      }
-    });
 
     const data = [];
     let emptyCustomerCellsCount = 0;
@@ -61,7 +80,8 @@ async function parseAndValidateFile(file, invoicingMonth) {
       rowIndex++;
     }
 
-    return data;
+    const currencyRates = findCurrencyRates(worksheet);
+    return { data, currencyRates }; // Повертаємо об'єкт з даними та валютними курсами
   } catch (error) {
     throw error;
   }

@@ -1,15 +1,10 @@
-async function processInvoices(data) {
+async function processInvoices(data, currencyRates) {
   try {
-    const currencyRates = {
-      USD: data[0]["USD Rate"],
-      EUR: data[0]["EUR Rate"],
-      GBP: data[0]["GBP Rate"],
-    };
-
-    data.shift();
+    //console.log(data);
 
     const invoicesData = [];
-    data.forEach((row) => {
+    data.forEach((row, index) => {
+      // Додаємо індекс для першого рядка, де зберігаються валютні курси
       const invoice = {};
 
       if (row["Status"] !== "Ready" && !row["Invoice #"]) {
@@ -27,14 +22,13 @@ async function processInvoices(data) {
       const invoiceTotal = totalPrice * currencyRate;
       invoice["Invoice Total"] = invoiceTotal;
 
-      // Валідація рахунку
       const validationErrors = validateInvoice(row);
       invoice["validationErrors"] = validationErrors;
 
       invoicesData.push(invoice);
     });
 
-    const invoicingMonth = data[0]["InvoicingMonth"];
+    const invoicingMonth = data[1]["InvoicingMonth"]; // Змінив індекс, оскільки ми видалили перший рядок
 
     return {
       InvoicingMonth: invoicingMonth,
@@ -49,7 +43,38 @@ async function processInvoices(data) {
 function validateInvoice(invoice) {
   const validationErrors = [];
 
-  // В процесі
+  const mandatoryFields = [
+    "Customer",
+    "Cust No'",
+    "Project Type",
+    "Quantity",
+    "Price Per Item",
+    "Item Price Currency",
+    "Total Price",
+    "Invoice Currency",
+    "Status",
+  ];
+  mandatoryFields.forEach((field) => {
+    if (!invoice[field]) {
+      validationErrors.push(`Missing mandatory field: ${field}`);
+    }
+  });
+
+  if (typeof invoice["Quantity"] !== "number" || invoice["Quantity"] <= 0) {
+    validationErrors.push("Quantity must be a positive number");
+  }
+  if (
+    typeof invoice["Price Per Item"] !== "number" ||
+    invoice["Price Per Item"] <= 0
+  ) {
+    validationErrors.push("Price Per Item must be a positive number");
+  }
+  if (
+    typeof invoice["Total Price"] !== "number" ||
+    invoice["Total Price"] < 0
+  ) {
+    validationErrors.push("Total Price must be a non-negative number");
+  }
 
   return validationErrors;
 }

@@ -3,7 +3,6 @@ const invoiceService = require("../services/invoiceService");
 
 exports.uploadFile = async (req, res) => {
   try {
-    console.log("Uploading file...");
     if (!req.files || !req.files.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
@@ -11,12 +10,12 @@ exports.uploadFile = async (req, res) => {
     const file = req.files.file;
     const invoicingMonth = req.body.invoicingMonth;
 
-    const parsedData = await fileService.parseAndValidateFile(
+    const { data, currencyRates } = await fileService.parseAndValidateFile(
       file,
       invoicingMonth
     );
-    console.log("File loaded successfully");
-    const result = await invoiceService.processInvoices(parsedData);
+
+    const result = await invoiceService.processInvoices(data, currencyRates);
 
     return res.status(200).json(result);
   } catch (error) {
