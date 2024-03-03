@@ -16,6 +16,12 @@ async function parseAndValidateFile(file, invoicingMonth) {
       throw new Error("Invoicing month mismatch");
     }
 
+    const columnsRow = worksheet.getRow(5);
+    const columns = [];
+    columnsRow.eachCell({ includeEmpty: true }, function (cell, colNumber) {
+      columns[colNumber] = cell.value;
+    });
+
     validationUtils.validateTableStructure(columns);
 
     const currencyRates = {};
