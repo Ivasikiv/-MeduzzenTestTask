@@ -43,9 +43,32 @@ async function parseAndValidateFile(file, invoicingMonth) {
       throw new Error("Invoicing month mismatch");
     }
 
-    const columnsRow = worksheet.getRow(5);
+    const currencyRates = findCurrencyRates(worksheet);
+
+    // Шукаю рядок з заголовками стовпців
+    let headerRow;
+    for (let rowNumber = 1; rowNumber <= worksheet.rowCount; rowNumber++) {
+      const row = worksheet.getRow(rowNumber);
+      let allColumnsPresent = true;
+      row.eachCell({ includeEmpty: true }, function (cell, colNumber) {
+        const columnName = cell.value;
+        if (!columnName) {
+          allColumnsPresent = false;
+        }
+      });
+      if (allColumnsPresent) {
+        headerRow = row;
+        break;
+      }
+    }
+
+    if (!headerRow) {
+      throw new Error("No row found with column headers");
+    }
+
+    // Зчитування назв стовпців
     const columns = [];
-    columnsRow.eachCell({ includeEmpty: true }, function (cell, colNumber) {
+    headerRow.eachCell({ includeEmpty: true }, function (cell, colNumber) {
       columns[colNumber] = cell.value;
     });
 
@@ -54,7 +77,7 @@ async function parseAndValidateFile(file, invoicingMonth) {
     const data = [];
     let emptyCustomerCellsCount = 0;
 
-    let rowIndex = 6;
+    let rowIndex = headerRow.number + 1; // Починаємо зчитування даних після рядка із заголовками
     while (emptyCustomerCellsCount < 3) {
       const row = worksheet.getRow(rowIndex);
       const rowData = {};
@@ -79,11 +102,12 @@ async function parseAndValidateFile(file, invoicingMonth) {
       rowIndex++;
     }
 
-    const currencyRates = findCurrencyRates(worksheet);
     return { data, currencyRates };
   } catch (error) {
     throw error;
   }
 }
+
+module.exports = { parseAndValidateFile };
 
 module.exports = { parseAndValidateFile };
