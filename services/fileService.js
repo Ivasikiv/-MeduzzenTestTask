@@ -77,7 +77,7 @@ async function parseAndValidateFile(file, invoicingMonth) {
     const data = [];
     let emptyCustomerCellsCount = 0;
 
-    let rowIndex = headerRow.number + 1; // Починаємо зчитування даних після рядка із заголовками
+    let rowIndex = headerRow.number + 1;
     while (emptyCustomerCellsCount < 3) {
       const row = worksheet.getRow(rowIndex);
       const rowData = {};
@@ -107,7 +107,5 @@ async function parseAndValidateFile(file, invoicingMonth) {
     throw error;
   }
 }
-
-module.exports = { parseAndValidateFile };
 
 module.exports = { parseAndValidateFile };
